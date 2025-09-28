@@ -1,0 +1,19 @@
+{
+  "name": "devlink-be",
+  "version": "1.0.0",
+  "description": "Link for developers",
+  "main": "index.js",
+  "scripts": {
+    "test": "test",
+    "start":"nodemon src/app.js"
+  },
+  "keywords": [
+    "node.js",
+    "javascript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
