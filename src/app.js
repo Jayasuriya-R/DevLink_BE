@@ -18,6 +18,14 @@ app.use("/guest", (req, res) => {
   res.send("hello from guest");
 });
 
+
+app.post('/user',(req,res)=>{
+  res.send("post response")
+})
+
+app.get('/user',(req,res)=>{
+  res.send("get response")
+})
 // app.use("/", (req, res) => {
 //   res.send("hello from server");
 // });
