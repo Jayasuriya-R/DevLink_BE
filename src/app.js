@@ -18,14 +18,36 @@ app.use("/guest", (req, res) => {
   res.send("hello from guest");
 });
 
+app.post("/user", (req, res) => {
+  res.send("post response");
+});
 
-app.post('/user',(req,res)=>{
-  res.send("post response")
-})
+app.get(
+  "/user/:userId",
+  [(req, res, next) => {
+    console.log("query", req.params);
 
-app.get('/user',(req,res)=>{
-  res.send("get response")
-})
-// app.use("/", (req, res) => {
-//   res.send("hello from server");
-// });
+    next();
+    
+  },
+  (req,res,next ) => {
+    next()
+   
+  },
+  (req,res)=>{
+    if('xyz' === 'xyz'){
+  res.send("hello from server");
+
+  }else{
+    res.status(401).send("unauthorized")
+  }
+  }]
+);
+app.use("/", (req, res) => {
+  if('xyx' === 'xyz'){
+  res.send("hello from server");
+
+  }else{
+    res.status(401).send("unauthorized")
+  }
+});
