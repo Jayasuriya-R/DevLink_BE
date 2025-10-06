@@ -1,5 +1,6 @@
 const adminAuth = (req,res,next)=>{
-  if(true){
+    const isAuthenticated = 'xyz'== 'xyz'
+  if(isAuthenticated){
     next()
   }else{
     res.status(401).send("unauthorized")
