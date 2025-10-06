@@ -1,4 +1,5 @@
 const express = require("express");
+const {adminAuth} = require("./middleware/auth")
 
 const app = express();
 
@@ -6,13 +7,12 @@ app.listen(3000, () => {
   console.log("server is satrted successfully");
 });
 
-app.use("/1/2", (req, res) => {
-  res.send("hello from server 2..");
-});
+app.use('/admin',adminAuth)
 
-app.use("/1", (req, res) => {
-  res.send("hello from server 1..");
-});
+app.get('/admin/:adminId',(req,res)=>{
+  console.log("admin id", req.params)
+  res.send("Hello admin")
+})
 
 app.use("/guest", (req, res) => {
   res.send("hello from guest");
@@ -43,11 +43,11 @@ app.get(
   }
   }]
 );
-app.use("/", (req, res) => {
-  if('xyx' === 'xyz'){
-  res.send("hello from server");
+// app.use("/", (req, res) => {
+//   if('xyx' === 'xyz'){
+//   res.send("hello from server");
 
-  }else{
-    res.status(401).send("unauthorized")
-  }
-});
+//   }else{
+//     res.status(401).send("unauthorized")
+//   }
+// });
