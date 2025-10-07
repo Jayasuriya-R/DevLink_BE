@@ -1,5 +1,5 @@
 const express = require("express");
-const {adminAuth} = require("./middleware/auth")
+const { adminAuth , guestAuth} = require("./middleware/auth");
 
 const app = express();
 
@@ -7,14 +7,15 @@ app.listen(3000, () => {
   console.log("server is satrted successfully");
 });
 
-app.use('/admin',adminAuth)
+app.use("/admin", adminAuth);
 
-app.get('/admin/:adminId',(req,res)=>{
-  console.log("admin id", req.params)
-  res.send("Hello admin")
-})
+app.get("/admin/:adminId", (req, res) => {
+  console.log("admin id", req.params);
+  res.send("Hello admin");
+});
 
-app.use("/guest", (req, res) => {
+app.use("/guest", guestAuth,(req, res) => {
+  throw new Error("error occured")
   res.send("hello from guest");
 });
 
@@ -22,32 +23,10 @@ app.post("/user", (req, res) => {
   res.send("post response");
 });
 
-app.get(
-  "/user/:userId",
-  [(req, res, next) => {
-    console.log("query", req.params);
-
-    next();
-    
-  },
-  (req,res,next ) => {
-    next()
-   
-  },
-  (req,res)=>{
-    if('xyz' === 'xyz'){
-  res.send("hello from server");
-
-  }else{
-    res.status(401).send("unauthorized")
+app.use('/',(err,req,res,next)=>{
+  if(err){
+    res.status(500).send("something went wrong")
   }
-  }]
-);
-// app.use("/", (req, res) => {
-//   if('xyx' === 'xyz'){
-//   res.send("hello from server");
+})
 
-//   }else{
-//     res.status(401).send("unauthorized")
-//   }
-// });
+
