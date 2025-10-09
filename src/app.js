@@ -6,14 +6,13 @@ const { User } = require("./models/user");
 
 const app = express();
 
+app.use(express.json());
+
 app.post("/signup", async (req, res) => {
-  const userObj = {
-    firstName: "Surya",
-    lastName: "R",
-    emailId: "surya@gmail.com",
-    password: "surya123",
-  };
-  const user = new User(userObj);
+
+  console.log(req.body)
+  
+  const user = new User(req.body);
   try {
     await user.save();
     res.send("user added successfully");
