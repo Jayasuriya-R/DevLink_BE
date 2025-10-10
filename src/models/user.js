@@ -1,27 +1,85 @@
 const mongoose = require("mongoose");
+const validator = require("validator")
 
 const userSchema = new mongoose.Schema({
   firstName: {
     type: String,
+    required: true,
+    minLength: 3,
+    maxLength: 50,
   },
   lastName: {
     type: String,
+     required: true,
+    minLength: 3,
+    maxLength: 50,
   },
   emailId: {
     type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true,
+    minLength: 10,
+    maxLength: 100,
+    validate(value){
+     if(!validator.isEmail(value)) {
+      throw new Error("Invalid email "+value)
+     }
+    }
   },
   password: {
     type: String,
+    required: true,
+    minLength: 6,
+    maxLength:12,
+    trim: true,
   },
   gender: {
     type: String,
+    lowercase: true,
+    required : true,
+    trim: true,
+    validate(value) {
+      const allowed = ["male", "female", "others"];
+      if (!allowed.includes(value)) {
+        throw new Error(
+          `Invalid gender type. Allowed values: ${allowed.join(", ")}`
+        );
+      }
+    },
   },
   age: {
     type: Number,
+    min: 18,
+    required:true,
+    trim:true,
+    default:null
   },
+  photoUrl: {
+    type: String,
+    default:
+      "https://villagesonmacarthur.com/wp-content/uploads/2020/12/Blank-Avatar.png",
+      validate(value){
+     if(!validator.isURL(value)) {
+      throw new Error("Invalid URL "+value)
+     }
+    }
+  },
+  shortDescription: {
+    type: String,
+    default:""
+  },
+  skills: {
+    type: [String],
+    validate(value){
+      if(value.length > 5) throw new Error("Skills limit exceeded")
+    }
+  },
+},{
+  timestamps: true
 });
-
 
 const User = mongoose.model("user", userSchema);
 
-module.exports = {User}
+module.exports = { User };

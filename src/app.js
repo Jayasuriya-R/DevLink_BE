@@ -16,7 +16,7 @@ app.post("/signup", async (req, res) => {
     await user.save();
     res.send("user added successfully");
   } catch (err) {
-    res.status(400).send("error occured", err.message);
+    res.status(400).send(err.message);
   }
 });
 
@@ -47,14 +47,23 @@ app.delete("/user", async (req, res) => {
   }
 });
 
-app.patch("/user", async (req, res) => {
+app.patch("/user/:userId", async (req, res) => {
+  const data = req.body;
+  const notAllowedUpdates = ["emailId", "age"];
   try {
-    const data = await User.findByIdAndUpdate(req.body._id, {
-      firstName: req.body.firstName
-    },{ new: true } );
-    res.send(data);
+    const isNotAllowed = Object.keys(data).some((k) =>
+      notAllowedUpdates.includes(k)
+    );
+    if (isNotAllowed)
+      throw new Error(`update not allowed for ${notAllowedUpdates.join(",")}`);
+
+    await User.findByIdAndUpdate(req.params?.userId, data, {
+      new: true,
+      runValidators: true,
+    });
+    res.send("Updated sucessfully");
   } catch (err) {
-    res.status(400).send("something went wrong", err.message);
+    res.status(400).send("update failed" + err.message);
   }
 });
 
