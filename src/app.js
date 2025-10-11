@@ -3,10 +3,13 @@ const { connectDB } = require("./config/database");
 const { User } = require("./models/user");
 const { validateSingnupData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
+const { loginAuth } = require("./middleware/auth");
+const cookieParser = require("cookie-parser")
 
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser())
 
 app.post("/signup", async (req, res) => {
   try {
@@ -30,25 +33,16 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-app.post("/login",async (req, res) => {
-  try {
-    const {emailId,password} = req.body
-    const user = await User.findOne({emailId:emailId});
-    
-    if(!user){
-      throw new Error("Invalid credentials")
-    }
-    const isPasswordValid = await bcrypt.compare(password,user.password)
-
-    if(isPasswordValid){
-      res.send("login sucessfull")
-    }else{
-      throw new Error("Invalid credentials")
-    }
-  } catch (err) {
-    res.status(400).send("Error: " + err.message);
-  }
+app.post("/login", loginAuth, async (req, res) => {
+  res.cookie("token","kanjsdnwiAMXXLLaieakjdcosii")
+  res.send("login suceessfull");
 });
+
+app.get("/profile",(req,res)=>{
+  const cookies = req.cookies;
+  console.log(cookies)
+  res.send("got the cookie back")
+})
 
 app.get("/user", async (req, res) => {
   try {
