@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
   lastName: {
     type: String,
      required: true,
-    minLength: 3,
+    minLength: 1,
     maxLength: 50,
   },
   emailId: {
@@ -32,8 +32,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     minLength: 6,
-    maxLength:12,
+    
     trim: true,
+    validate(value){
+      if(! validator.isStrongPassword(value)){
+        throw new Error("Enter a Storng password "+value)
+      }
+    }
   },
   gender: {
     type: String,
