@@ -5,7 +5,7 @@ const { validateSingnupData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
 const { loginAuth, verifyToken } = require("./middleware/auth");
 const cookieParser = require("cookie-parser");
-const jwt = require("jsonwebtoken");
+
 
 const app = express();
 
@@ -17,7 +17,7 @@ app.post("/signup", async (req, res) => {
     validateSingnupData(req);
     const { firstName, lastName, emailId, password, age, gender } = req.body;
     const passwordHash = await bcrypt.hash(password, 10);
-    console.log(passwordHash);
+    // console.log(passwordHash);
 
     const user = new User({
       firstName,
@@ -35,13 +35,15 @@ app.post("/signup", async (req, res) => {
 });
 
 app.post("/login", loginAuth, async (req, res) => {
-  const token = await jwt.sign({ _id: req.user._id }, "DEV@link#3801", {
-    expiresIn: "1d",
-  });
-  console.log(token);
+
+  const user = req.user
+  const token = await user.getJWT();
+  // console.log(token);
 
   //add token to cookie
-  res.cookie("token", token);
+  res.cookie("token", token, {
+    expires: new Date(Date.now()+1*3600000)
+  });
   res.send("login suceessfull");
 });
 
