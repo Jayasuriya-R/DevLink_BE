@@ -3,13 +3,14 @@ const { connectDB } = require("./config/database");
 const { User } = require("./models/user");
 const { validateSingnupData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
-const { loginAuth } = require("./middleware/auth");
-const cookieParser = require("cookie-parser")
+const { loginAuth, verifyToken } = require("./middleware/auth");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 
 app.use(express.json());
-app.use(cookieParser())
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   try {
@@ -34,15 +35,19 @@ app.post("/signup", async (req, res) => {
 });
 
 app.post("/login", loginAuth, async (req, res) => {
-  res.cookie("token","kanjsdnwiAMXXLLaieakjdcosii")
+  const token = await jwt.sign({ _id: req.user._id }, "DEV@link#3801", {
+    expiresIn: "1d",
+  });
+  console.log(token);
+
+  //add token to cookie
+  res.cookie("token", token);
   res.send("login suceessfull");
 });
 
-app.get("/profile",(req,res)=>{
-  const cookies = req.cookies;
-  console.log(cookies)
-  res.send("got the cookie back")
-})
+app.get("/profile", verifyToken, async (req, res) => {
+  res.send(req.user);
+});
 
 app.get("/user", async (req, res) => {
   try {
@@ -89,6 +94,11 @@ app.patch("/user/:userId", async (req, res) => {
   } catch (err) {
     res.status(400).send("update failed" + err.message);
   }
+});
+
+app.post("/sendConnectionRequest", verifyToken, (req, res) => {
+  const user = req.user;
+  res.send("Connection request send by " + user.firstName);
 });
 
 connectDB()
