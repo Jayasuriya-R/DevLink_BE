@@ -10,7 +10,7 @@ reviewRouter.patch(
   verifyToken,
   async (req, res) => {
     try {
-      const user = req.user;
+      const currentUser = req.user;
       const { status, requestId } = req.params;
 
       const allowedStatus = ["accepted", "rejected"];
@@ -21,7 +21,7 @@ reviewRouter.patch(
 
       const connectionRequest = await ConnectionRequest.findOne({
         _id: requestId,
-        toUserId: user._id,
+        toUserId: currentUser._id,
         status: "interested",
       });
 
@@ -36,7 +36,7 @@ reviewRouter.patch(
       const data = await connectionRequest.save();
 
       res.json({
-        message: `${user.firstName} is ${status} the request`,
+        message: `${currentUser.firstName} is ${status} the request`,
         data,
       });
     } catch (err) {

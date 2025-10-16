@@ -18,6 +18,8 @@
 # User router
 - GET /user/connection
 - GET /user/requests
+
+# Feed router
 - GET /user/feed - profiles of other users on platform
 
 status : unintrested, interested, accepted, rejected
