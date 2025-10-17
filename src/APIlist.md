@@ -14,7 +14,6 @@
 # ConnectionReview router
 - POST /request/review/:status/:requestId
 
-
 # User router
 - GET /user/connection
 - GET /user/requests
