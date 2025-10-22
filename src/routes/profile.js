@@ -9,7 +9,7 @@ const profileRouter = express.Router();
 profileRouter.get("/profile/view", verifyToken, async (req, res) => {
   try {
     const user = req.user;
-    res.send(user);
+    res.json({ message: user.firstName +" profile", data: user });
   } catch (err) {
     res.status(400).send("Error: " + err.message);
   }
@@ -63,8 +63,8 @@ profileRouter.patch("/profile/edit/password", verifyToken, async (req, res) => {
         message: user.firstName + " password Updated sucessfully",
         data: updatedData,
       });
-    }else{
-      throw new Error("Invalid password")
+    } else {
+      throw new Error("Invalid password");
     }
   } catch (err) {
     res.status(400).send("Error: " + err.message);

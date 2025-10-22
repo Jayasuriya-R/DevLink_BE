@@ -36,14 +36,14 @@ authRouter.post("/login", loginAuth, async (req, res) => {
   res.cookie("token", token, {
     expires: new Date(Date.now() + 1 * 3600000),
   });
-  res.send("login suceessfull");
+  res.json({message:"login suceessfull"});
 });
 
 authRouter.post("/logout", async (req, res) => {
   res.cookie("token", null, {
     expires: new Date(Date.now()),
   });
-  res.send("logout sucessfull")
+  res.json({message:"logout sucessfull"})
 });
 
 module.exports = authRouter;
