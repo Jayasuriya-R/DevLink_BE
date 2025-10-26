@@ -28,7 +28,7 @@ const verifyToken = async (req, res, next) => {
     const cookies = req.cookies;
     const { token } = cookies;
     if (!token) {
-      throw new Error("Invalid token");
+      throw new Error("Invalid token login again");
     }
     const decodedMessage = await jwt.verify(token, "DEV@link#3801");
     const { _id } = decodedMessage;
