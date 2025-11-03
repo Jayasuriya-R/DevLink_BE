@@ -1,27 +1,22 @@
 const express = require("express");
+require("dotenv").config();
 const { connectDB } = require("./config/database");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+ 
+
 
 const app = express();
 app.use(express.json());
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  
-  console.log('Incoming request:', {
-    method: req.method,
-    origin: origin,
-    path: req.path
-  });
 
   if (origin === "http://localhost:5173") {
     res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
     res.setHeader("Access-Control-Allow-Credentials", "true");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    
-    console.log('CORS headers set');
   }
 
   if (req.method === "OPTIONS") {

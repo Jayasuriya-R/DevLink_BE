@@ -13,9 +13,9 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 cloudinary.config({
-  cloud_name: "dh2owqbze",
-  api_key: "219993928232937",
-  api_secret: "QluHmXf_OEL1WYdBFAbUzMx1qQQ",
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 authRouter.post("/signup", upload.single("photo"), async (req, res) => {
@@ -64,7 +64,6 @@ authRouter.post("/signup", upload.single("photo"), async (req, res) => {
     res.status(400).send("Error: " + err.message);
   }
 });
-
 
 authRouter.post("/login", loginAuth, async (req, res) => {
   const user = req.user;

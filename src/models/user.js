@@ -2,6 +2,42 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
 
+async function verifyEmailExists(email) {
+  const API_KEY = process.env.ZEROBOUNCE_API_KEY; // Store in .env file
+
+  try {
+    const response = await fetch(
+      `https://api.zerobounce.net/v2/validate?api_key=${API_KEY}&email=${encodeURIComponent(
+        email
+      )}`
+    );
+    const data = await response.json();
+
+    // Check if email exists and is not disposable/toxic
+    if (data.status === "invalid") {
+      throw new Error("Email address does not exist");
+    }
+
+    if (data.disposable) {
+      throw new Error("Temporary/disposable emails are not allowed");
+    }
+
+    if (data.toxic || data.status === "spamtrap" || data.status === "abuse") {
+      throw new Error("This email cannot be used");
+    }
+
+    // Accept valid and catch-all emails
+    const acceptableStatuses = ["valid", "catch-all"];
+    if (!acceptableStatuses.includes(data.status)) {
+      throw new Error("Unable to verify email address");
+    }
+
+    return true;
+  } catch (error) {
+    throw new Error(error.message || "Email verification failed");
+  }
+}
+
 const userSchema = new mongoose.Schema(
   {
     firstName: {
@@ -24,11 +60,22 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       minLength: 10,
       maxLength: 100,
-      validate(value) {
-        if (!validator.isEmail(value)) {
-          throw new Error("Invalid email " + value);
-        }
-      },
+      validate: [
+        {
+          // Synchronous validation - format check
+          validator: function (value) {
+            return validator.isEmail(value);
+          },
+          message: "Invalid email format",
+        },
+        {
+          // Asynchronous validation - existence check
+          validator: async function (value) {
+            return await verifyEmailExists(value);
+          },
+          message: (props) => props.reason || "Email verification failed",
+        },
+      ],
     },
     password: {
       type: String,
@@ -92,7 +139,7 @@ const userSchema = new mongoose.Schema(
 userSchema.methods.getJWT = async function () {
   const user = this;
 
-  const token = await jwt.sign({ _id: user._id }, "DEV@link#3801", {
+  const token = await jwt.sign({ _id: user._id }, process.env.JWT_SECRET_KEY, {
     expiresIn: "1d",
   });
 

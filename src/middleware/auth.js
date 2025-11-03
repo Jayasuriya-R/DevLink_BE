@@ -30,7 +30,7 @@ const verifyToken = async (req, res, next) => {
     if (!token) {
       throw new Error("Invalid token login again");
     }
-    const decodedMessage = await jwt.verify(token, "DEV@link#3801");
+    const decodedMessage = await jwt.verify(token, process.env.JWT_SECRET_KEY);
     const { _id } = decodedMessage;
     const user = await User.findById({ _id });
     if (!user) {

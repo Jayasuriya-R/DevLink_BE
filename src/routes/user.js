@@ -11,6 +11,7 @@ const Fields_Required = [
   "skills",
   "age",
   "gender",
+  "shortDescription",
 ];
 
 userRouter.get("/user/requests/received", verifyToken, async (req, res) => {
