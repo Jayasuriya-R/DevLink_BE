@@ -3,6 +3,8 @@ require("dotenv").config();
 const { connectDB } = require("./config/database");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const http  = require('http');
+const initializeSocket = require("./utils/sockets");
  
 
 
@@ -53,9 +55,13 @@ app.use("/", require("./routes/review"));
 app.use("/", require("./routes/user"));
 app.use("/", require("./routes/feed"));
 
+const server = http.createServer(app)
+initializeSocket(server)
+
+
 connectDB()
   .then(() => {
     console.log("DB connection successful");
-    app.listen(3000, () => console.log("Server started on port 3000"));
+    server.listen(3000, () => console.log("Server started on port 3000"));
   })
   .catch(() => console.log("Connection failed"));

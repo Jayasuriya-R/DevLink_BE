@@ -2,8 +2,8 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
-const {User} = require("../models/user.js");
-const {validateSingnupData} = require("../utils/validation.js")
+const { User } = require("../models/user.js");
+const { validateSingnupData } = require("../utils/validation.js");
 const streamifier = require("streamifier");
 const { loginAuth } = require("../middleware/auth.js");
 
@@ -21,7 +21,24 @@ cloudinary.config({
 authRouter.post("/signup", upload.single("photo"), async (req, res) => {
   try {
     validateSingnupData(req);
-    const { firstName, lastName, emailId, password, age, gender ,shortDescription,skills} = req.body;
+    const {
+      firstName,
+      lastName,
+      emailId,
+      password,
+      age,
+      gender,
+      shortDescription,
+      skills,
+    } = req.body;
+
+    if (typeof skills === "string") {
+      try {
+        skills = JSON.parse(skills);
+      } catch {
+        skills = [skills]; 
+      }
+    }
 
     let photoUrl = "";
 
@@ -54,11 +71,13 @@ authRouter.post("/signup", upload.single("photo"), async (req, res) => {
     });
 
     await user.save();
-    res.status(201).send(
-      photoUrl
-        ? "User added successfully with image"
-        : "User added successfully without image"
-    );
+    res
+      .status(201)
+      .send(
+        photoUrl
+          ? "User added successfully with image"
+          : "User added successfully without image"
+      );
   } catch (err) {
     console.error(err);
     res.status(400).send("Error: " + err.message);
@@ -72,24 +91,23 @@ authRouter.post("/login", loginAuth, async (req, res) => {
 
   //add token to cookie
   res.cookie("token", token, {
-  httpOnly: true,
-  secure: true,       
-  sameSite: "lax",     
-  maxAge: 3600000,     // 1 hour
-});
-  res.json({message:"login suceessfull",data:user});
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    maxAge: 3600000, // 1 hour
+  });
+  res.json({ message: "login suceessfull", data: user });
 });
 
 authRouter.post("/logout", async (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
-    secure: true,          
-    sameSite: "none",      
-    path: "/",             
+    secure: true,
+    sameSite: "none",
+    path: "/",
   });
-  
+
   res.status(200).json({ message: "Logout successful" });
 });
-
 
 module.exports = authRouter;
