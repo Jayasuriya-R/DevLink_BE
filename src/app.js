@@ -16,7 +16,8 @@ app.use((req, res, next) => {
 
   const allowedOrigins = [
     "http://localhost:5173",
-    "https://dev-link-fe.onrender.com"
+    "https://dev-link-fe.onrender.com",
+    "https://dev-link-fe.vercel.app"
   ];
 
   if (allowedOrigins.includes(origin)) {
