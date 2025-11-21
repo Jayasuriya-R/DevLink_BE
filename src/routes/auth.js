@@ -18,6 +18,14 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Cookie options for cross-origin (Vercel frontend + separate backend)
+const cookieOptions = {
+  httpOnly: true,
+  secure: true,
+  sameSite: "None",  // ✅ Changed from "lax" to "None"
+  maxAge: 24 * 60 * 60 * 1000, // 1 day
+};
+
 authRouter.post("/signup", upload.single("photo"), async (req, res) => {
   try {
     validateSingnupData(req);
@@ -32,18 +40,18 @@ authRouter.post("/signup", upload.single("photo"), async (req, res) => {
       skills,
     } = req.body;
 
+    let parsedSkills = skills;
     if (typeof skills === "string") {
       try {
-        skills = JSON.parse(skills);
+        parsedSkills = JSON.parse(skills);
       } catch {
-        skills = [skills]; 
+        parsedSkills = [skills];
       }
     }
 
     let photoUrl = "";
 
     if (req.file) {
-      // Wrap upload_stream in a Promise to use await
       photoUrl = await new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           { folder: "users" },
@@ -66,8 +74,8 @@ authRouter.post("/signup", upload.single("photo"), async (req, res) => {
       gender,
       age,
       shortDescription,
-      skills,
-      ...(photoUrl && { photoUrl }), // only add photoUrl if available
+      skills: parsedSkills,
+      ...(photoUrl && { photoUrl }),
     });
 
     await user.save();
@@ -87,23 +95,18 @@ authRouter.post("/signup", upload.single("photo"), async (req, res) => {
 authRouter.post("/login", loginAuth, async (req, res) => {
   const user = req.user;
   const token = await user.getJWT();
-  // console.log(token);
 
-  //add token to cookie
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    maxAge: 3600000, // 1 hour
-  });
-  res.json({ message: "login suceessfull", data: user });
+  // ✅ Fixed: Using consistent cookie options with sameSite: "None"
+  res.cookie("token", token, cookieOptions);
+  res.json({ message: "login successful", data: user });
 });
 
 authRouter.post("/logout", async (req, res) => {
+  // ✅ Fixed: Using same options for clearing cookie
   res.clearCookie("token", {
     httpOnly: true,
     secure: true,
-    sameSite: "none",
+    sameSite: "None",
     path: "/",
   });
 
