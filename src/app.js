@@ -7,13 +7,13 @@ const http = require("http");
 const initializeSocket = require("./utils/sockets");
 
 const app = express();
+
+// 🟢 IMPORTANT: Needed for secure cookies on Render / Railway / Vercel
+app.set("trust proxy", 1);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
-// --------------------------------------
-// CORS Configuration
-// --------------------------------------
 
 const allowedOrigins = [
   "http://localhost:5173",
@@ -24,7 +24,6 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow mobile apps / curl / postman (no origin)
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -37,8 +36,7 @@ app.use(
   })
 );
 
-
-
+// ROUTES
 app.use("/", require("./routes/auth"));
 app.use("/", require("./routes/profile"));
 app.use("/", require("./routes/request"));
@@ -46,10 +44,9 @@ app.use("/", require("./routes/review"));
 app.use("/", require("./routes/user"));
 app.use("/", require("./routes/feed"));
 
-
-
 const server = http.createServer(app);
 initializeSocket(server);
+
 
 
 connectDB()
