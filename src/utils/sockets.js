@@ -1,4 +1,5 @@
 const socket = require("socket.io");
+const Chat = require("../models/chat");
 
 const initializeSocket = (server) => {
   const io = socket(server, {
@@ -17,24 +18,28 @@ io.on('connection', (socket) => {
 
   socket.on('register', ({ userId }) => {
     connectedUsers.set(userId, socket.id);
-    console.log(`📝 User registered - UserID: ${userId}, SocketID: ${socket.id}`);
-    console.log(`👥 Total connected users: ${connectedUsers.size}`);
-    console.log('Connected users:', Array.from(connectedUsers.keys()));
+  
   });
 
   
   socket.on('sendMessage', ({ currentUserId, targetUserId, newMsg, firstName }) => {
-    console.log('\n📤 SEND MESSAGE EVENT:');
-    console.log(`   From: ${currentUserId} (${firstName})`);
-    console.log(`   To: ${targetUserId}`);
-    console.log(`   Message: "${newMsg.text}"`);
-    console.log(`   Sender socket: ${socket.id}`);
+    
 
    
     const targetSocketId = connectedUsers.get(targetUserId);
-    console.log(`   Target socket: ${targetSocketId || 'NOT FOUND'}`);
+    
 
     if (targetSocketId) {
+
+      // save messages to database
+
+      try{
+        const chat = Chat.findOne({
+          participents:{$all :[currentUserId, targetUserId]}
+        })
+      }catch(err){
+        console.error('Error saving message to database:', err);
+      }
       
       io.to(targetSocketId).emit('receiveMessage', {
         newMsg: {
