@@ -1,77 +1,125 @@
 const socket = require("socket.io");
+const mongoose = require('mongoose'); // ✅ Add mongoose import
 const Chat = require("../models/chat");
 
 const initializeSocket = (server) => {
   const io = socket(server, {
     cors: {
-      origin: "http://localhost:5173", // ✅ Change to your frontend URL
+      origin: "http://localhost:5173",
       methods: ["GET", "POST"],
       credentials: true,
     },
   });
 
- const connectedUsers = new Map();
+  const connectedUsers = new Map();
 
-io.on('connection', (socket) => {
-  console.log('✅ User connected with socket ID:', socket.id);
+  io.on('connection', (socket) => {
+    console.log('✅ User connected with socket ID:', socket.id);
 
+    socket.on('register', ({ userId }) => {
+      socket.userId = userId;
+      connectedUsers.set(userId, socket.id);
+      console.log(`👤 User registered: ${userId}`);
+    });
 
-  socket.on('register', ({ userId }) => {
-    connectedUsers.set(userId, socket.id);
-  
-  });
+    socket.on('sendMessage', async ({ currentUserId, targetUserId, newMsg, firstName }) => {
+      console.log('📨 Received sendMessage:', { currentUserId, targetUserId, newMsg, firstName });
+      
+      const targetSocketId = connectedUsers.get(targetUserId);
 
-  
-  socket.on('sendMessage', ({ currentUserId, targetUserId, newMsg, firstName }) => {
-    
+      try {
+        // ✅ Convert string IDs to ObjectIds
+        const currentUserObjectId = new mongoose.Types.ObjectId(currentUserId);
+        const targetUserObjectId = new mongoose.Types.ObjectId(targetUserId);
 
-   
-    const targetSocketId = connectedUsers.get(targetUserId);
-    
+        console.log('🔍 Searching for chat between:', currentUserId, 'and', targetUserId);
 
-    if (targetSocketId) {
+        // Find existing chat
+        let chat = await Chat.findOne({
+          participents: { $all: [currentUserObjectId, targetUserObjectId] }
+        });
 
-      // save messages to database
+        console.log('🔍 Found existing chat:', chat ? 'YES' : 'NO');
 
-      try{
-        const chat = Chat.findOne({
-          participents:{$all :[currentUserId, targetUserId]}
-        })
-      }catch(err){
-        console.error('Error saving message to database:', err);
+        if (!chat) {
+          console.log('➕ Creating new chat...');
+          chat = new Chat({
+            participents: [currentUserObjectId, targetUserObjectId],
+            messages: [],
+          });
+        }
+
+        // Add message
+        chat.messages.push({
+          senderId: currentUserObjectId,
+          text: newMsg.text,
+        });
+
+        // Save to database
+        const savedChat = await chat.save();
+        console.log('✅ Message saved to DB! Total messages:', savedChat.messages.length);
+        console.log('✅ Last message:', savedChat.messages[savedChat.messages.length - 1]);
+
+        // Send confirmation back to sender
+        socket.emit('messageSent', {
+          success: true,
+          messageId: savedChat.messages[savedChat.messages.length - 1]._id
+        });
+
+        // If target is online, deliver in real-time
+        if (targetSocketId) {
+          io.to(targetSocketId).emit('receiveMessage', {
+            newMsg: {
+              ...newMsg,
+              sender: 'them'
+            },
+            senderId: currentUserId,
+            firstName: firstName
+          });
+          console.log(`✅ Message delivered to ${targetUserId}`);
+        } else {
+          console.log(`💾 Message saved for offline user: ${targetUserId}`);
+        }
+
+      } catch (err) {
+        console.error('❌❌❌ Error saving message to database ❌❌❌');
+        console.error('Error name:', err.name);
+        console.error('Error message:', err.message);
+        console.error('Full error:', err);
+        
+        // Notify sender of failure
+        socket.emit('messageError', {
+          error: 'Failed to send message',
+          details: err.message
+        });
+      }
+    });
+
+    // Handle typing indicator
+    socket.on('typing', ({ currentUserId, targetUserId, isTyping }) => {
+      const targetSocketId = connectedUsers.get(targetUserId);
+      if (targetSocketId) {
+        io.to(targetSocketId).emit('userTyping', {
+          userId: currentUserId,
+          isTyping
+        });
+      }
+    });
+
+    // Handle disconnect
+    socket.on('disconnect', () => {
+      console.log('🔌 Socket disconnected:', socket.id);
+      
+      if (socket.userId) {
+        connectedUsers.delete(socket.userId);
+        console.log(`👋 User ${socket.userId} disconnected`);
       }
       
-      io.to(targetSocketId).emit('receiveMessage', {
-        newMsg: {
-          ...newMsg,
-          sender: 'them' 
-        },
-        senderId: currentUserId,
-        firstName: firstName
-      });
-      console.log(`✅ Message delivered to ${targetUserId}`);
-    } else {
-      console.log(`❌ User ${targetUserId} is NOT CONNECTED`);
-      console.log(`   Available users: ${Array.from(connectedUsers.keys()).join(', ')}`);
-      
-    }
+      console.log(`👥 Remaining users: ${connectedUsers.size}`);
+    });
   });
-
-  // Handle disconnect
-  socket.on('disconnect', () => {
-    console.log('🔌 Socket disconnected:', socket.id);
-   
-    for (const [userId, socketId] of connectedUsers.entries()) {
-      if (socketId === socket.id) {
-        connectedUsers.delete(userId);
-        console.log(`👋 User ${userId} disconnected`);
-        console.log(`👥 Remaining users: ${connectedUsers.size}`);
-        break;
-      }
-    }
-  });
-});
   
+  return io; // ✅ Return io instance in case you need it elsewhere
 };
 
 module.exports = initializeSocket;

@@ -15,6 +15,7 @@ feedRouter.get("/feed", verifyToken, async (req, res) => {
     "age",
     "gender",
     "shortDescription",
+    "emailId"
   ];
   try {
     const currentUser = req.user;

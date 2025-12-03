@@ -44,6 +44,7 @@ app.use("/", require("./routes/review"));
 app.use("/", require("./routes/user"));
 app.use("/", require("./routes/feed"));
 app.use("/", require("./routes/email"));
+app.use("/",require("./routes/messages"))
 
 const server = http.createServer(app);
 initializeSocket(server);

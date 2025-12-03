@@ -6,6 +6,7 @@ const userRouter = express.Router();
 
 const Fields_Required = [
   "firstName",
+  "emailId",
   "lastName",
   "photoUrl",
   "skills",
