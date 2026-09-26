@@ -1,5 +1,30 @@
 const express = require("express");
 require("dotenv").config();
+
+// Fail fast with a clear message if required env vars are missing,
+// instead of crashing deep inside a library with a cryptic error.
+const REQUIRED_ENV_VARS = [
+  "DB_CONNECTION_SECRET",
+  "JWT_SECRET_KEY",
+  "CLOUDINARY_CLOUD_NAME",
+  "CLOUDINARY_API_KEY",
+  "CLOUDINARY_API_SECRET",
+  "ZEROBOUNCE_API_KEY",
+  "RESEND_API_KEY",
+  "EMAIL_FROM",
+];
+
+const missingEnvVars = REQUIRED_ENV_VARS.filter((key) => !process.env[key]);
+
+if (missingEnvVars.length > 0) {
+  console.error("\n❌ Missing required environment variable(s):");
+  missingEnvVars.forEach((key) => console.error(`   - ${key}`));
+  console.error(
+    "\nSet these in your hosting provider's Environment/Secrets settings (e.g. Render → Environment tab), then redeploy.\n"
+  );
+  process.exit(1);
+}
+
 const { connectDB } = require("./config/database");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
